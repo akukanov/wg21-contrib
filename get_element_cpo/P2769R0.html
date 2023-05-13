@@ -1563,17 +1563,17 @@ Possible extra rowspan handling
   <meta content="Bikeshed version 3383f409d, updated Fri Apr 28 15:49:22 2023 -0700" name="generator">
   <link href="https://wg21.link/P2769R1" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="2c7327836eb7c9d2c000667d3c4ca3a9ea873948" name="document-revision">
+  <meta content="1f13715be6da64e28455b7d6c201f649dfb360e1" name="document-revision">
 <style>
 .ins, ins, ins * {
     background-color: rgb(200, 250, 200);
     color: rgb(0, 136, 0);
     text-decoration: none;
 }
+
 .span, span, span * {
     white-space: pre;
 }
-
 </style>
 <style>/* style-autolinks */
 .css.css, .property.property, .descriptor.descriptor {
@@ -2103,7 +2103,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">P2769R1<br>get_element customization point object</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-13">2023-05-13</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-14">2023-05-14</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2200,8 +2200,8 @@ we cannot easily use a predicate to make a decision based on only some of tuple 
 </pre>
    <p>As we can see, users should spell some extra syntax out to achieve the necessary goal,
 comparing to what is described in <a href="#desired_approach">§ 1.3 The desired approach</a>. The example above can be considered
-simplified; in real world examples users might need to also think about adding references
-to lambda signature to avoid copying.</p>
+simplified; in real practice users might also need to think of e.g. adding references
+to lamdda parameters to avoid copying.</p>
    <p>The code above can be rewritten with <em>structured binding</em>:</p>
 <pre class="language-cpp highlight"><c- n>std</c-><c- o>::</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>std</c-><c- o>::</c-><c- n>tuple</c-><c- o>&lt;</c-><c- b>int</c-><c- p>,</c-> <c- b>int</c-><c- o>>></c-> <c- n>v</c-><c- p>{{</c-><c- mi>3</c-><c- p>,</c-><c- mi>1</c-><c- p>},{</c-><c- mi>2</c-><c- p>,</c-><c- mi>4</c-><c- p>},{</c-><c- mi>1</c-><c- p>,</c-><c- mi>7</c-><c- p>}};</c->
 <c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- p>[](</c-><c- k>auto</c-> <c- n>x</c-><c- p>,</c-> <c- k>auto</c-> <c- n>y</c-><c- p>)</c->
@@ -2311,10 +2311,11 @@ the number of comparator calls, while counting-based sorts do not use a comparat
 parallel algorithms, such as oneAPI Data Parallel C++ Library (oneDPL) and CUDA Thrust, use Radix Sort
 conditionally under the hood of <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>sort</c-></code>, checking data types of the input and the comparator.
 In this case, a special comparator is of no help to sort values by keys, and projections seem the only viable option.</p>
-   <p>That makes the proposed API applicable wider than just with the C++ standard library use-cases.</p>
+   <p>That makes the proposed API applicable wider than just with the C++ standard library use cases.</p>
    <h2 class="heading settled" data-level="2" id="proposed_api"><span class="secno">2. </span><span class="content">Proposed API</span><a class="self-link" href="#proposed_api"></a></h2>
    <p>We propose the following API:</p>
-<pre class="language-cpp highlight"><c- kr>inline</c-> <c- k>namespace</c-> <c- d>/* unspecified */</c-> <c- p>{</c->
+<pre class="language-cpp highlight"><c- kr>inline</c-> <c- k>namespace</c-> <c- d>/* unspecified */</c->
+<c- p>{</c->
     <c- k>template</c-> <c- o>&lt;</c-><c- b>size_t</c-> <c- n>I</c-><c- o>></c->
     <c- kr>inline</c-> <c- k>constexpr</c-> <c- d>/* unspecified */</c-> <c- n>get_element</c-> <c- o>=</c-> <c- d>/* unspecified */</c-><c- p>;</c->
 <c- p>}</c->
@@ -2405,38 +2406,42 @@ But we (likely) could not avoid an ABI break.</p>
    <p>In all major standard library implementations (GCC, LLVM, Microsoft) the <code class="highlight"><c- n>get</c-></code> overload for <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code> is defined in <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-></code>. Adding another definition of <code class="highlight"><c- n>get</c-></code> to
 the same namespace would obviously create name ambiguity.</p>
    <p>However, library implementors could move the current <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>get</c-></code> function to an implementation specific
-namespace (e.g., <code class="highlight"><c- n>detail</c-></code>) and inherit (possibly privately) <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code> from an empty tag class
+namespace (e.g., <code class="highlight"><c- n>__detail</c-></code>) and inherit (possibly privately) <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code> from an empty tag class
 (e.g., <code class="highlight"><c- n>adl_hook</c-></code>) defined in the same namespace.
-That way <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>detail</c-><c- o>::</c-><c- n>get</c-></code> can still be found by ADL for <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code>, and at the same time,
+That way <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>__detail</c-><c- o>::</c-><c- n>get</c-></code> can still be found by ADL for <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code>, and at the same time,
 the <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>get</c-></code> name becomes free to be redefined as a CPO that could successfully find a necessary overload
 for <code class="highlight"><c- n>get</c-></code>, including the case when the argument is a <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>subrange</c-></code>.
 Moreover, the proposed <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>get</c-></code> CPO type could have a parameter pack in the interface to cover the use case when
 the current <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>get</c-></code> function is used with explicit template arguments.</p>
    <p>Please see the example that explains the idea and shows how it might look like. A full implementation with examples
 is available <a href="https://godbolt.org/z/boKcMWd5f">here</a>.</p>
-<pre class="language-cpp highlight"><c- k>namespace</c-> <c- nn>std</c-> <c- p>{</c->
-    <c- k>namespace</c-> <c- nn>ranges</c-> <c- p>{</c->
-        <c- c1>// Necessary to make detail namespace being considered by ADL</c->
-        <c- c1>// for get&lt;0>(std::ranges::subrange&lt;something>{}) without moving</c->
-        <c- c1>// subrange itself to another namespace</c->
-        <c- k>namespace</c-> <c- nn>detail</c-> <c- p>{</c->
-            <c- k>struct</c-> <c- nc>adl_hook</c-> <c- p>{};</c->
-        <c- p>}</c->
+<pre class="language-cpp highlight"><c- k>namespace</c-> <c- nn>std</c->
+<c- p>{</c->
+<c- k>namespace</c-> <c- nn>ranges</c->
+<c- p>{</c->
+<c- c1>// Necessary to make namespace __detail being considered by ADL</c->
+<c- c1>// for get&lt;0>(std::ranges::subrange&lt;something>{}) without moving</c->
+<c- c1>// the subrange itself to another namespace</c->
+<c- k>namespace</c-> <c- nn>__detail</c->
+<c- p>{</c->
+<c- k>struct</c-> <c- nc>adl_hook</c-> <c- p>{};</c->
+<c- p>}</c->
 
-        <c- c1>// thanks to the empty-base optimization, inheriting adl_hook does not break ABI</c->
-        <c- k>template</c-> <c- o>&lt;</c-><c- k>class</c-> <c- nc>T</c-><c- o>></c-> <c- k>class</c-> <c- nc>subrange</c-> <c- o>:</c-> <c- n>detail</c-><c- o>::</c-><c- n>adl_hook</c-> <c- p>{</c->
-            <c- k>public</c-><c- o>:</c-> <c- n>T</c-> <c- n>whatever</c-><c- p>;</c->
-        <c- p>};</c->
+<c- c1>// thanks to the empty-base optimization, inheriting adl_hook does not break ABI</c->
+<c- k>template</c-> <c- o>&lt;</c-><c- k>class</c-> <c- nc>T</c-><c- o>></c-> <c- k>class</c-> <c- nc>subrange</c-> <c- o>:</c-> <c- n>__detail</c-><c- o>::</c-><c- n>adl_hook</c-> <c- p>{</c->
+    <c- k>public</c-><c- o>:</c-> <c- n>T</c-> <c- n>whatever</c-><c- p>;</c->
+<c- p>};</c->
 
-        <c- k>namespace</c-> <c- nn>detail</c-> <c- p>{</c->
-            <c- k>template</c-> <c- o>&lt;</c-><c- n>std</c-><c- o>::</c-><c- b>size_t</c-><c- p>,</c-> <c- k>class</c-> <c- nc>T</c-><c- o>></c->
-            <c- k>auto</c-> <c- n>get</c-><c- p>(</c-><c- n>subrange</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>x</c-><c- p>)</c-> <c- p>{</c->
-                <c- k>return</c-> <c- n>x</c-><c- p>.</c-><c- n>whatever</c-><c- p>;</c->
-            <c- p>}</c->
-        <c- p>}</c->
-    <c- p>}</c-> <c- c1>// namespace ranges</c->
+<c- k>namespace</c-> <c- nn>__detail</c->
+<c- p>{</c->
+<c- k>template</c-> <c- o>&lt;</c-><c- n>std</c-><c- o>::</c-><c- b>size_t</c-><c- p>,</c-> <c- k>class</c-> <c- nc>T</c-><c- o>></c->
+<c- k>auto</c-> <c- n>get</c-><c- p>(</c-><c- n>subrange</c-><c- o>&lt;</c-><c- n>T</c-><c- o>></c-> <c- n>x</c-><c- p>)</c-> <c- p>{</c->
+    <c- k>return</c-> <c- n>x</c-><c- p>.</c-><c- n>whatever</c-><c- p>;</c->
+<c- p>}</c->
+<c- p>}</c-> <c- c1>// namespace __detail</c->
+<c- p>}</c-> <c- c1>// namespace ranges</c->
 
-    <c- k>using</c-> <c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>detail</c-><c- o>::</c-><c- n>get</c-><c- p>;</c->
+<c- k>using</c-> <c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>__detail</c-><c- o>::</c-><c- n>get</c-><c- p>;</c->
 <c- p>}</c-> <c- c1>// namespace std</c->
 
 <c- k>namespace</c-> <c- nn>std</c->
@@ -2515,7 +2520,7 @@ deserves a separate paper, yet we would like to provide some ruminations how it 
 exposition only and, to the best of our knowledge, doesn’t affect overload resolution or class
 specialization then it should not cause unexpected overloads being called.</p>
    <p>Then the <em>tuple-like</em> concept can reuse <em>has-tuple-element</em> and do something like:</p>
-<pre class="language-cpp highlight"><c- c1>// necessary to check if tuple_size is well-formed before using it</c->
+<pre class="language-cpp highlight"><c- c1>// necessary to check if std::tuple_size_v is well-formed before using it</c->
 <c- k>template</c-> <c- o>&lt;</c-><c- k>typename</c-> <c- nc>T</c-><c- o>></c->
 <c- k>concept</c-> <c- d>/*has-tuple-size*/</c-> <c- o>=</c->  <c- c1>// exposition only</c->
 <c- k>requires</c-> <c- p>{</c->
@@ -2547,8 +2552,8 @@ the <em>tuple-like</em> concept making it as generic as for the types structured
 a yet another <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get</c-></code> overload that works with any <em>Tuple-Like</em> object except those that are already in
 the <code class="highlight"><c- n>std</c-><c- o>::</c-></code> namespace.</p>
    <p>With <a data-link-type="biblio" href="#biblio-p2141r1" title="Aggregates are named tuples">[P2141R1]</a> being adopted <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get</c-></code> does the right thing and works with <em>Tuple-Like</em> object, so we may use
-just <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get</c-><c- o>&lt;</c-><c- n>_Ip</c-><c- o>></c-><c- p>(</c-><c- n>std</c-><c- o>::</c-><c- n>forward</c-><c- o>&lt;</c-><c- n>_TupleLike</c-><c- o>></c-><c- p>(</c-><c- n>__tuple_like</c-><c- p>))</c-></code> within the implementation instead of
-unqualified <code class="highlight"><c- n>get</c-><c- o>&lt;</c-><c- n>_Ip</c-><c- o>></c-><c- p>(</c-><c- n>std</c-><c- o>::</c-><c- n>forward</c-><c- o>&lt;</c-><c- n>_TupleLike</c-><c- o>></c-><c- p>(</c-><c- n>__tuple_like</c-><c- p>))</c-></code> call.</p>
+just <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get</c-><c- o>&lt;</c-><c- n>_Ip</c-><c- o>></c-><c- p>(</c-><c- n>std</c-><c- o>::</c-><c- n>forward</c-><c- o>&lt;</c-><c- n>_TupleLike</c-><c- o>></c-><c- p>(</c-><c- n>__tuple_like</c-><c- p>))</c-></code> within the implementation of <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get_element</c-></code> instead of
+the unqualified <code class="highlight"><c- n>get</c-></code> call.</p>
    <p>Independently of <a data-link-type="biblio" href="#biblio-p2141r1" title="Aggregates are named tuples">[P2141R1]</a> <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>get_element</c-></code> brings its own value by covering the described motivation use-cases.
 Furthermore, in the standard there are already precedences of having two similar things with slightly different
 semantics, for example, <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>less</c-></code> and <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>less</c-></code>, where the latter is not even a CPO.</p>
@@ -2580,23 +2585,11 @@ semantics, for example, <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n
    </blockquote>
    <h3 class="heading settled" data-level="6.3" id="wording_tuple_get_elem"><span class="secno">6.3. </span><span class="content">Add the following wording into [<strong>tuple.cust.get_elem</strong>]</span><a class="self-link" href="#wording_tuple_get_elem"></a></h3>
    <ins>
-    <blockquote>
-     <ol>
-      <li data-md>
-       <p>The name <code class="highlight"><c- n>get_element</c-></code> denotes a customization point object (<a href="https://eel.is/c++draft/customization.point.object">[<b>customization.point.object</b>])</a>.
-The expression <code class="highlight"><c- n>get_element</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> where <code class="highlight"><c- n>I</c-></code> is <code class="highlight"><c- n>std</c-><c- o>::</c-><c- b>size_t</c-></code> for a subexpression <code class="highlight"><c- n>E</c-></code> is
-expression-equivalent to:</p>
-       <ol>
-        <li data-md>
-         <p><code class="highlight"><c- n>get</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code>, if <code class="highlight"><c- n>E</c-></code> has class or enumeration type and <code class="highlight"><c- n>get</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> is a well-formed expression
+    <blockquote> <span>1. The name <code class="highlight"><c- n>get_element</c-></code> denotes a customization point object (<a href="https://eel.is/c++draft/customization.point.object">[<b>customization.point.object</b>])</a>.
+    The expression <code class="highlight"><c- n>get_element</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> where <code class="highlight"><c- n>I</c-></code> is <code class="highlight"><c- n>std</c-><c- o>::</c-><c- b>size_t</c-></code> for a subexpression <code class="highlight"><c- n>E</c-></code> is
+    expression-equivalent to: <ol><li data-md><p><code class="highlight"><c- n>get</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code>, if <code class="highlight"><c- n>E</c-></code> has class or enumeration type and <code class="highlight"><c- n>get</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> is a well-formed expression
 when treated as an unevaluated operand, where the meaning of <code class="highlight"><c- n>get</c-></code> is established as-if by
-performing argument-dependent lookup only (<a href="https://eel.is/c++draft/basic.lookup.argdep">[<b>basic.lookup.argdep]</b>)</a>.</p>
-        <li data-md>
-         <p>Otherwise, <code class="highlight"><c- n>get_element</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> is ill-formed.</p>
-       </ol>
-     </ol>
-     <p></p>
-    </blockquote>
+performing argument-dependent lookup only (<a href="https://eel.is/c++draft/basic.lookup.argdep">[<b>basic.lookup.argdep]</b>)</a>.</p> </li><li data-md><p>Otherwise, <code class="highlight"><c- n>get_element</c-><c- o>&lt;</c-><c- n>I</c-><c- o>></c-><c- p>(</c-><c- n>E</c-><c- p>)</c-></code> is ill-formed.</p> </li></ol></span></blockquote>
    </ins>
    <h3 class="heading settled" data-level="6.4" id="wording_feature_macro"><span class="secno">6.4. </span><span class="content">Add feature test macro to the end of <a href="http://eel.is/c++draft/version.syn">[<strong>version.syn</strong>]</a></span><a class="self-link" href="#wording_feature_macro"></a></h3>
    <ins>

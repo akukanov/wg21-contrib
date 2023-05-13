@@ -18,10 +18,10 @@ Abstract: This paper introduces a CPO to read from tuple like objects, which can
     color: rgb(0, 136, 0);
     text-decoration: none;
 }
+
 .span, span, span * {
     white-space: pre;
 }
-
 </style>
 
 # Motivation # {#motivation}
@@ -29,9 +29,9 @@ Abstract: This paper introduces a CPO to read from tuple like objects, which can
 ## Motivating use case ## {#motivating_use_case}
 
 Having `std::pair`, `std::tuple` and other *Tuple-Like* objects as the value types for the algorithms
-creates a plenty of opportunities. With special views (like `std::ranges::elements_view`) we can even
-iterate over such collections with specifying necessary elements (e.g., keys or values). However,
-we cannot (easily) use a predicate to make a decision based on (for example) keys.
+creates a plenty of opportunities. With special views, such as `std::ranges::elements_view`, we can
+specify which tuple elements to access when iterating over collections of such objects. However,
+we cannot easily use a predicate to make a decision based on only some of tuple elements, for example keys or values.
 
 Let's consider the following example:
 
@@ -39,14 +39,15 @@ Let's consider the following example:
 std::vector<std::tuple<int, int>> v{{3,1},{2,4},{1,7}};
 std::ranges::sort(v, [](auto x, auto y)
 {
-    return std::get<0>(x) < std::get<0>(y); // key-based sorting
+    // key-based sorting
+    return std::get<0>(x) < std::get<0>(y);
 });
 ```
 
-As we can see users should do some extra syntax to spell (comparing with what is described
-in [[#desired_approach]]) to achieve the necessary goal. The example above can be considered
-as simplified because in real world example users might need to think about adding references
-to lambda signature to avoid copying.
+As we can see, users should spell some extra syntax out to achieve the necessary goal,
+comparing to what is described in [[#desired_approach]]. The example above can be considered
+simplified; in real practice users might also need to think of e.g. adding references
+to lamdda parameters to avoid copying.
 
 The code above can be rewritten with *structured binding*:
 
@@ -54,9 +55,10 @@ The code above can be rewritten with *structured binding*:
 std::vector<std::tuple<int, int>> v{{3,1},{2,4},{1,7}};
 std::ranges::sort(v, [](auto x, auto y)
 {
+    // key-based sorting
     auto [key1, value1] = x;
     auto [key2, value2] = y;
-    return key1 < key2; // key-based sorting
+    return key1 < key2;
 });
 ```
 
@@ -71,9 +73,10 @@ still might require the user to write a quite amount of underscores depending on
 std::vector<std::tuple<int, int, int, int>> v{{3,1,1,1},{2,4,4,4},{1,7,7,7}};
 std::ranges::sort(v, [](auto x, auto y)
 {
+    // key-based sorting
     auto [key1, _, _, _] = x;
     auto [key2, _, _, _] = y;
-    return key1 < key2; // key-based sorting
+    return key1 < key2;
 });
 ```
 
@@ -84,7 +87,8 @@ Projections provide another option to achieve the same behavior:
 ```cpp
 std::ranges::sort(v, std::less{}, [](auto x)
 {
-    return std::get<0>(x); // key-based sorting
+    // key-based sorting
+    return std::get<0>(x);
 });
 ```
 
@@ -93,7 +97,8 @@ A variant that properly handles references would use a generic lambda:
 ```
 [](auto&& x) -> auto&&
 {
-    return std::get<0>(std::forward<decltype(x)>(x)); // key-based sorting
+    // key-based sorting
+    return std::get<0>(std::forward<decltype(x)>(x));
 }
 ```
 
@@ -187,15 +192,15 @@ parallel algorithms, such as oneAPI Data Parallel C++ Library (oneDPL) and CUDA 
 conditionally under the hood of `std::sort`, checking data types of the input and the comparator.
 In this case, a special comparator is of no help to sort values by keys, and projections seem the only viable option.
 
-In that case the proposed API becomes wider applicable than just with C++ standard library
-use cases.
+That makes the proposed API applicable wider than just with the C++ standard library use cases.
 
 # Proposed API # {#proposed_api}
 
 We propose the following API:
 
 ```cpp
-inline namespace /* unspecified */ {
+inline namespace /* unspecified */
+{
     template <size_t I>
     inline constexpr /* unspecified */ get_element = /* unspecified */;
 }
@@ -318,9 +323,9 @@ In all major standard library implementations (GCC, LLVM, Microsoft) the `get` o
 the same namespace would obviously create name ambiguity.
 
 However, library implementors could move the current `std::ranges::get` function to an implementation specific
-namespace (e.g., `detail`) and inherit (possibly privately) `std::ranges::subrange` from an empty tag class
+namespace (e.g., `__detail`) and inherit (possibly privately) `std::ranges::subrange` from an empty tag class
 (e.g., `adl_hook`) defined in the same namespace.
-That way `std::ranges::detail::get` can still be found by ADL for `std::ranges::subrange`, and at the same time,
+That way `std::ranges::__detail::get` can still be found by ADL for `std::ranges::subrange`, and at the same time,
 the `std::ranges::get` name becomes free to be redefined as a CPO that could successfully find a necessary overload
 for `get`, including the case when the argument is a `std::ranges::subrange`.
 Moreover, the proposed `std::ranges::get` CPO type could have a parameter pack in the interface to cover the use case when
@@ -330,29 +335,33 @@ Please see the example that explains the idea and shows how it might look like. 
 is available [here](https://godbolt.org/z/boKcMWd5f).
 
 ```cpp
-namespace std {
-    namespace ranges {
-        // Necessary to make detail namespace being considered by ADL
-        // for get<0>(std::ranges::subrange<something>{}) without moving
-        // subrange itself to another namespace
-        namespace detail {
-            struct adl_hook {};
-        }
+namespace std
+{
+namespace ranges
+{
+// Necessary to make namespace __detail being considered by ADL
+// for get<0>(std::ranges::subrange<something>{}) without moving
+// the subrange itself to another namespace
+namespace __detail
+{
+struct adl_hook {};
+}
 
-        // thanks to the empty-base optimization, inheriting adl_hook does not break ABI
-        template <class T> class subrange : detail::adl_hook {
-            public: T whatever;
-        };
+// thanks to the empty-base optimization, inheriting adl_hook does not break ABI
+template <class T> class subrange : __detail::adl_hook {
+    public: T whatever;
+};
 
-        namespace detail {
-            template <std::size_t, class T>
-            auto get(subrange<T> x) {
-                return x.whatever;
-            }
-        }
-    } // namespace ranges
+namespace __detail
+{
+template <std::size_t, class T>
+auto get(subrange<T> x) {
+    return x.whatever;
+}
+} // namespace __detail
+} // namespace ranges
 
-    using std::ranges::detail::get;
+using std::ranges::__detail::get;
 } // namespace std
 
 namespace std
@@ -416,13 +425,13 @@ is worth introducing potential inconvenience for some C++ users.
 
 # *tuple-like* concept # {#tuple_like_concept}
 
-With proposed `std::get_element` *tuple-like* concept also can be generalized enough to cover
-wider range of types rather than just those listed from `std::` namespace. Although, we believe it
-deserves separate paper we want to provide some ruminations how it might look like.
+With the proposed `std::get_element` CPO, the *tuple-like* concept can be generalized to cover
+wider range of types rather than just the listed standard types. Although we think it
+deserves a separate paper, yet we would like to provide some ruminations how it might look like.
 
 ## *tuple-like* concept generalization with `get_element` ## {#tuple_like_with_get_element}
 
-Existing *has-tuple-element* exposition-only concept can be taken and modified with `get_element`
+The existing *has-tuple-element* exposition-only concept can be taken and modified with `get_element`
 in the following way:
 
 ```cpp
@@ -441,12 +450,13 @@ With that modification the old code continues to work. We relax the concept. Sin
 exposition only and, to the best of our knowledge, doesn't affect overload resolution or class
 specialization then it should not cause unexpected overloads being called.
 
-*tuple-like* concept can just reuse *has-tuple-element* one and do something like:
+Then the *tuple-like* concept can reuse *has-tuple-element* and do something like:
 
 ```cpp
-// necessary to check is tuple size is well-formed before using it
+// necessary to check if std::tuple_size_v is well-formed before using it
 template <typename T>
-concept /*has-tuple-size*/ = requires {
+concept /*has-tuple-size*/ =  // exposition only
+requires {
     typename std::tuple_size<T>::type;
 };
 
@@ -460,36 +470,36 @@ concept /* tuple-like */ = !std::is_reference_v<T> &&
 
 ## *tuple-like* concept generalization with structured binding ## {#tuple_like_with_structured_binding}
 
-Another way to generalize *tuple-like* concept is via structured binding. Basically it's proposed in [[P2141R1]].
+Another way to generalize the *tuple-like* concept is via structured binding. Basically it's proposed in [[P2141R1]].
 Please see [[#p2141_connection]] for more information.
 
 # Connections with other papers # {#other_papers_connections}
 
 ## Connection with [[P2547R1]] ## {#p2547_connection}
 
-[[P2547R1]] uses `std::get` as the example and good candidate to be customizable function
-authors plan to ship the customizable functions proposal first and then deal with candidates
-to be customizable functions later that means we should not expect that examples in this paper
+[[P2547R1]] uses `std::get` as the example and a good candidate to be a customizable function.
+Authors plan to ship the customizable functions proposal first and deal with customizing
+standard library functions later. That means we should not expect that examples in this paper
 automatically would be transformed to customizable functions when it will land.
 
-Moreover, at this period of time they (authors of [[P2547R1]]) don't see how to introduce customizable
-functions with the same names (e.g. `std::get`) without the ABI break so they likely need to choose the
+Moreover, at this time the authors of [[P2547R1]] don't see how to introduce customizable functions
+with the same names (e.g. `std::get`) without the ABI break, so they will likely need to choose
 different names.
 
 ## Connection with [[P2141R1]] ## {#p2141_connection}
 
-[[P2141R1]]'s main goal is allow aggregates being interpreted as *tuple-like*. At the same time, it touches
-*tuple-like* concept making it as generic as for types structured binding can work with. It also adds
-yet another `std::get` overload that works with any *tuple-like* object except those that are already in `std::`
-namespace.
+[[P2141R1]]'s main goal is allow aggregates being interpreted as *Tuple-Like*. At the same time, it touches
+the *tuple-like* concept making it as generic as for the types structured binding can work with. It also adds
+a yet another `std::get` overload that works with any *Tuple-Like* object except those that are already in
+the `std::` namespace.
 
-With [[P2141R1]] being adopted `std::get` does the right thing and works with *tuple-like* object we may use
-just `std::get<_Ip>(std::forward<_TupleLike>(__tuple_like))` within the implementation instead of
-unqualified `get<_Ip>(std::forward<_TupleLike>(__tuple_like))` call.
+With [[P2141R1]] being adopted `std::get` does the right thing and works with *Tuple-Like* object, so we may use
+just `std::get<_Ip>(std::forward<_TupleLike>(__tuple_like))` within the implementation of `std::get_element` instead of
+the unqualified `get` call.
 
-Independently of [[P2141R1]] `std::get_element` brings its own value because it covers the motivation use case.
-Furthermore, we already have precedence in the standard having two similar things with slightly different
-semantics; for example `std::less` and `std::ranges::less` (the latter is not even CPO).
+Independently of [[P2141R1]] `std::get_element` brings its own value by covering the described motivation use-cases.
+Furthermore, in the standard there are already precedences of having two similar things with slightly different
+semantics, for example, `std::less` and `std::ranges::less`, where the latter is not even a CPO.
 
 # Formal wording # {#wording}
 
@@ -533,16 +543,13 @@ inline constexpr auto get_value = get_element&lt;1>;
 
 <ins>
 <blockquote>
-
-1. The name <code>get_element</code> denotes a customization point object (<a href="https://eel.is/c++draft/customization.point.object">[<b>customization.point.object</b>])</a>.
+<span>1. The name <code>get_element</code> denotes a customization point object (<a href="https://eel.is/c++draft/customization.point.object">[<b>customization.point.object</b>])</a>.
     The expression <code>get_element&lt;I>(E)</code> where <code>I</code> is <code>std::size_t</code> for a subexpression <code>E</code> is
     expression-equivalent to:
     1. <code>get&lt;I>(E)</code>, if <code>E</code> has class or enumeration type and <code>get&lt;I>(E)</code> is a well-formed expression
         when treated as an unevaluated operand, where the meaning of <code>get</code> is established as-if by
         performing argument-dependent lookup only (<a href="https://eel.is/c++draft/basic.lookup.argdep">[<b>basic.lookup.argdep]</b>)</a>.
-    1. Otherwise, <code>get_element&lt;I>(E)</code> is ill-formed.
-
-</span>
+    2. Otherwise, <code>get_element&lt;I>(E)</code> is ill-formed.</span>
 </blockquote>
 </ins>
 
@@ -563,11 +570,11 @@ inline constexpr auto get_value = get_element&lt;1>;
 
 ## R0 => R1 ## {#r0_r1}
 
-* Address "structured binding unused variables" questions with [[P2169R3]]
-* Add ruminations about *tuple-like* concept relaxing 
+* Address the "structured binding unused variables" questions with [[P2169R3]]
+* Add ruminations about possible relaxation of the *tuple-like* concept
 * Add connections to [[P2547R1]] and [[P2141R1]]
-* Apply approach for less ABI and API break for `std::ranges::get` name
-* Add wording for `std::get_element` API with feature test macro
+* Apply an approach to minimize ABI and API breaking for the `std::ranges::get` name
+* Add wording and a feature test macro for the `std::get_element` API
 
 # Polls # {#polls}
 
@@ -615,8 +622,8 @@ inline constexpr auto get_value = get_element&lt;1>;
 
 * Thanks to Casey Carter for providing `adl_hook` trick for [[#design_decisions]]
 * Thanks to Corentin Jabot for providing the input for [[#p2547_connection]] and for
-    initial *tuple-like* concept relaxing idea 
-* Thanks Benjamin Brock for paper review and design discussions.
+    the initial *tuple-like* concept relaxing idea
+* Thanks to Benjamin Brock for paper review and design discussions.
 
 <pre class=biblio>
 {
