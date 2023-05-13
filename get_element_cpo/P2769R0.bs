@@ -1,8 +1,8 @@
 <pre class='metadata'>
 Title: get_element customization point object
-Shortname: D2769
+Shortname: P2769
 Level: 1
-Status: D
+Status: P
 Group: wg21
 Default Highlight: cpp
 URL: https://wg21.link/P2769R1
@@ -11,6 +11,18 @@ Editor: Ruslan Arutyunyan, Intel, ruslan.arutyunyan@intel.com
 Markup Shorthands: markdown yes
 Abstract: This paper introduces a CPO to read from tuple like objects, which can be used as projection for <code>std::ranges</code> algorithms.
 </pre>
+
+<style>
+.ins, ins, ins * {
+    background-color: rgb(200, 250, 200);
+    color: rgb(0, 136, 0);
+    text-decoration: none;
+}
+.span, span, span * {
+    white-space: pre;
+}
+
+</style>
 
 # Motivation # {#motivation}
 
@@ -114,7 +126,7 @@ would apply the filter for all operations on the input data, including element s
     <tr>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
                 // views::keys is an alias to views::elements
                 std::ranges::sort(v | std::ranges::views::keys, [](auto x, auto y)
                 {
@@ -135,7 +147,7 @@ would apply the filter for all operations on the input data, including element s
         </td>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
 
                 std::ranges::sort(v, [](auto x, auto y)
                 {
@@ -218,7 +230,7 @@ Comparison of proposed API with comparator-based version
     <tr>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
                 std::ranges::sort(v, [](auto x, auto y)
                 {
                     return std::get<0>(x) &lt; std::get<0>(y); // key-based sorting
@@ -227,7 +239,7 @@ Comparison of proposed API with comparator-based version
         </td>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
                 std::ranges::sort(v, std::less{}, std::ranges::get_key);
             </pre>
         </td>
@@ -244,7 +256,7 @@ Comparison of proposed API with projections-based version
     <tr>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
                 std::ranges::sort(v, std::less{}, [](auto x)
                 {
                     return std::get<0>(x); // key-based sorting
@@ -253,7 +265,7 @@ Comparison of proposed API with projections-based version
         </td>
         <td>
             <pre>
-                std::vector&lt;std::tuple&lt;int, int&gt;&gt; v{{3,1},{2,4},{1,7}};
+                std::vector&lt;std::tuple&lt;int, int>> v{{3,1},{2,4},{1,7}};
                 std::ranges::sort(v, std::less{}, std::ranges::get_key);
             </pre>
         </td>
@@ -271,7 +283,8 @@ template <std::size_t _Ip>
 struct __get_element_fn
 {
     template <typename _TupleLike>
-    decltype(auto) operator()(_TupleLike&& __tuple_like) const
+    auto operator()(_TupleLike&& __tuple_like) const ->
+         decltype(get<_Ip>(std::forward<_TupleLike>(__tuple_like)))
     {
         return get<_Ip>(std::forward<_TupleLike>(__tuple_like));
     }
@@ -482,73 +495,69 @@ semantics; for example `std::less` and `std::ranges::less` (the latter is not ev
 
 Below, substitute the � character with a number the editor finds appropriate for the table, paragraph, section or sub-section.
 
-## Modify Header <kbd>&lt;tuple&gt;</kbd> synopsis <a href="https://eel.is/c++draft/tuple.syn">[**tuple.syn**] </a> ## {#wording_tuple_syn}
+## Modify Header <code>&lt;tuple></code> synopsis <a href="https://eel.is/c++draft/tuple.syn">[**tuple.syn**] </a> ## {#wording_tuple_syn}
 
 <blockquote>
 [...]
 <pre>
-<kbd>
 // [tuple.helper], tuple helper classes
-template &lt;class T&gt;
+template &lt;class T>
   constexpr size_t tuple_size_v = tuple_size&lt;T>::value;
-</kbd>
+</pre>
 <ins>
-<kbd>
+<pre>
 inline namespace /* unspecified */ {
     template &lt;size_t I>
     inline constexpr /* unspecified */ get_element = /* unspecified */;
 }
 inline constexpr auto get_key = get_element&lt;0>;
 inline constexpr auto get_value = get_element&lt;1>;
-</kbd>
-</ins>
 </pre>
+</ins>
 </blockquote>
 
 ## Add the following sections into <a href="http://eel.is/c++draft/tuple">[**tuple**]</a> ## {#wording_tuple_sections}
 
 <blockquote>
-<pre>
 [...]
-� Element access [tuple.elem]
+� Element access [tuple.elem]<br>
 <ins>
+<span>
 � Customization Point Objects [tuple.cust]
-�   <kbd>get_element</kbd> [tuple.cust.get_elem]
+    � <code>get_element</code> [tuple.cust.get_elem]
+</span>
 </ins>
-</pre>
 </blockquote>
 
 ## Add the following wording into [**tuple.cust.get_elem**] ## {#wording_tuple_get_elem}
 
-<blockquote>
-<pre>
 <ins>
-1 The name<kbd> get_element</kbd> denotes a customization point object <a href="https://eel.is/c++draft/customization.point.object">([ <b> customization.point.object </b> ])</a>.
-  The expression<kbd> get_element&lt;I&gt;(E)</kbd> where <kbd>I</kbd> is<kbd> std::size_t</kbd> for a subexpression <kbd>E</kbd> is
-  expression-equivalent to:
-(1.1) - <kbd> get&lt;I&gt;(E)</kbd>, if <kbd>E</kbd> has class or enumeration type and<kbd> get&lt;I&gt;(E)</kbd> is a well-formed expression
-  when treated as an unevaluated operand, where the meaning of<kbd> get</kbd> is established as-if by
-  performing argument-dependent lookup only <a href="https://eel.is/c++draft/basic.lookup.argdep">(<b> [basic.lookup.argdep] </b> )</a>.
-(1.2) - Otherwise,<kbd> get_element&lt;I&gt;(E)</kbd> is ill-formed.
+<blockquote>
 
-</ins>
-</pre>
+1. The name <code>get_element</code> denotes a customization point object (<a href="https://eel.is/c++draft/customization.point.object">[<b>customization.point.object</b>])</a>.
+    The expression <code>get_element&lt;I>(E)</code> where <code>I</code> is <code>std::size_t</code> for a subexpression <code>E</code> is
+    expression-equivalent to:
+    1. <code>get&lt;I>(E)</code>, if <code>E</code> has class or enumeration type and <code>get&lt;I>(E)</code> is a well-formed expression
+        when treated as an unevaluated operand, where the meaning of <code>get</code> is established as-if by
+        performing argument-dependent lookup only (<a href="https://eel.is/c++draft/basic.lookup.argdep">[<b>basic.lookup.argdep]</b>)</a>.
+    1. Otherwise, <code>get_element&lt;I>(E)</code> is ill-formed.
+
+</span>
 </blockquote>
+</ins>
 
 ## Add feature test macro to the end of <a href="http://eel.is/c++draft/version.syn">[**version.syn**]</a> ## {#wording_feature_macro}
 
+<ins>
 <blockquote>
 [...]
-<pre>
-<ins>
-<kbd>
+<pre highlight="cpp">
  #define __cpp_lib_element_access_customization_point  20����L
-  <i>// also in </i>&lt;tuple><i>, </i>&lt;utility><i>, </i>&lt;array><i>, </i>  &lt;ranges>
-</kbd>
-</ins>
+  <i>// also in </i>&lt;tuple><i>, </i>&lt;utility><i>, </i>&lt;array><i>, </i>&lt;ranges>
 </pre>
 [...]
 </blockquote>
+</ins>
 
 # Revision history # {#revision_history}
 
@@ -564,7 +573,7 @@ inline constexpr auto get_value = get_element&lt;1>;
 
 ## SG9 polls, Issaquah 2023 ## {#sg9_issaquah_2023}
 
-**POLL**: The solution proposed in the paper “P2769: get_element customization point object” should be renamed to “std::ranges::get”.
+**POLL**: The solution proposed in the paper "P2769: `get_element` customization point object" should be renamed to `std::ranges::get`.
 
 <table>
 <tr>
@@ -583,7 +592,7 @@ inline constexpr auto get_value = get_element&lt;1>;
 </tr>
 </table>
 
-**POLL**: The solution proposed in the paper “P2769: get_element customization point object” should be moved out of the “ranges” namespace (std::get_element”).
+**POLL**: The solution proposed in the paper "P2769: `get_element` customization point object" should be moved out of the `ranges` namespace (`std::get_element`).
 
 <table>
 <tr>
