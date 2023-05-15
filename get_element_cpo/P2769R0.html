@@ -1563,15 +1563,15 @@ Possible extra rowspan handling
   <meta content="Bikeshed version 3383f409d, updated Fri Apr 28 15:49:22 2023 -0700" name="generator">
   <link href="https://wg21.link/P2769R1" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="1f13715be6da64e28455b7d6c201f649dfb360e1" name="document-revision">
+  <meta content="b5503d08b3a2bca5dc548e1079f898ac6578706e" name="document-revision">
 <style>
-.ins, ins, ins * {
+ins, ins * {
     background-color: rgb(200, 250, 200);
     color: rgb(0, 136, 0);
     text-decoration: none;
 }
 
-.span, span, span * {
+span, span * {
     white-space: pre;
 }
 </style>
@@ -2103,7 +2103,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">P2769R1<br>get_element customization point object</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-14">2023-05-14</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-15">2023-05-15</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2578,10 +2578,9 @@ semantics, for example, <code class="highlight"><c- n>std</c-><c- o>::</c-><c- n
    </blockquote>
    <h3 class="heading settled" data-level="6.2" id="wording_tuple_sections"><span class="secno">6.2. </span><span class="content">Add the following sections into <a href="http://eel.is/c++draft/tuple">[<strong>tuple</strong>]</a></span><a class="self-link" href="#wording_tuple_sections"></a></h3>
    <blockquote>
-     [...]
-� Element access [tuple.elem]<br> 
-    <ins> <span> � Customization Point Objects [tuple.cust]
-    � <code class="highlight"><c- n>get_element</c-></code> [tuple.cust.get_elem] </span> </ins>
+     [...]<br> � Element access [tuple.elem]<br> 
+    <ins> <span>� Customization Point Objects [tuple.cust]
+    � <code class="highlight"><c- n>get_element</c-></code> [tuple.cust.get_elem]</span> </ins>
    </blockquote>
    <h3 class="heading settled" data-level="6.3" id="wording_tuple_get_elem"><span class="secno">6.3. </span><span class="content">Add the following wording into [<strong>tuple.cust.get_elem</strong>]</span><a class="self-link" href="#wording_tuple_get_elem"></a></h3>
    <ins>
@@ -2793,7 +2792,7 @@ the initial <em>tuple-like</em> concept relaxing idea</p>
   <h3 class="no-num no-ref heading settled" id="informative"><span class="content">Informative References</span><a class="self-link" href="#informative"></a></h3>
   <dl>
    <dt id="biblio-p2141r1">[P2141R1]
-   <dd>Antony Polukhin. <a href="https://isocpp.org/files/papers/P2141R1.html"><cite>Aggregates are named tuples</cite></a>. 3 May 2023. URL: <a href="https://isocpp.org/files/papers/P2141R1.html">https://isocpp.org/files/papers/P2141R1.html</a>
+   <dd>Antony Polukhin. <a href="https://wg21.link/P2141R1"><cite>Aggregates are named tuples</cite></a>. 3 May 2023. URL: <a href="https://wg21.link/P2141R1">https://wg21.link/P2141R1</a>
    <dt id="biblio-p2169r3">[P2169R3]
    <dd>Corentin Jabot, Michael Park. <a href="https://wg21.link/p2169r3"><cite>A Nice Placeholder With No Name</cite></a>. 15 December 2022. URL: <a href="https://wg21.link/p2169r3">https://wg21.link/p2169r3</a>
    <dt id="biblio-p2547r1">[P2547R1]

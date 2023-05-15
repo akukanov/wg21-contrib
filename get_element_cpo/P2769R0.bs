@@ -13,13 +13,13 @@ Abstract: This paper introduces a CPO to read from tuple like objects, which can
 </pre>
 
 <style>
-.ins, ins, ins * {
+ins, ins * {
     background-color: rgb(200, 250, 200);
     color: rgb(0, 136, 0);
     text-decoration: none;
 }
 
-.span, span, span * {
+span, span * {
     white-space: pre;
 }
 </style>
@@ -529,13 +529,11 @@ inline constexpr auto get_value = get_element&lt;1>;
 ## Add the following sections into <a href="http://eel.is/c++draft/tuple">[**tuple**]</a> ## {#wording_tuple_sections}
 
 <blockquote>
-[...]
+[...]<br>
 � Element access [tuple.elem]<br>
 <ins>
-<span>
-� Customization Point Objects [tuple.cust]
-    � <code>get_element</code> [tuple.cust.get_elem]
-</span>
+<span>� Customization Point Objects [tuple.cust]
+    � <code>get_element</code> [tuple.cust.get_elem]</span>
 </ins>
 </blockquote>
 
@@ -629,12 +627,12 @@ inline constexpr auto get_value = get_element&lt;1>;
 {
     "P2141R1": {
         "authors": ["Antony Polukhin"],
-        "href": "https://isocpp.org/files/papers/P2141R1.html",
+        "href": "https://wg21.link/P2141R1",
         "title": "Aggregates are named tuples",
         "publisher": "Antony Polukhin",
         "date": "3 May 2023",
         "deliveredBy": [
-            "https://isocpp.org/files/papers/P2141R1.html"
+            "https://wg21.link/P2141R1"
         ]
     }
 }
