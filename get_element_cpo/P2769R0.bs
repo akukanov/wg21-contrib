@@ -8,6 +8,7 @@ Default Highlight: cpp
 URL: https://wg21.link/P2769R1
 Editor: Ruslan Arutyunyan, Intel, ruslan.arutyunyan@intel.com
         Alexey Kukanov, Intel, alexey.kukanov@intel.com
+Audience: SG9, LEWG
 Markup Shorthands: markdown yes
 Abstract: This paper introduces a CPO to read from tuple like objects, which can be used as projection for <code>std::ranges</code> algorithms.
 </pre>
@@ -47,7 +48,7 @@ std::ranges::sort(v, [](auto x, auto y)
 As we can see, users should spell some extra syntax out to achieve the necessary goal,
 comparing to what is described in [[#desired_approach]]. The example above can be considered
 simplified; in real practice users might also need to think of e.g. adding references
-to lamdda parameters to avoid copying.
+to lambda parameters to avoid copying.
 
 The code above can be rewritten with *structured binding*:
 

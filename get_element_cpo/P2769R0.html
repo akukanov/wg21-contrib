@@ -1563,7 +1563,7 @@ Possible extra rowspan handling
   <meta content="Bikeshed version 3383f409d, updated Fri Apr 28 15:49:22 2023 -0700" name="generator">
   <link href="https://wg21.link/P2769R1" rel="canonical">
   <link href="https://isocpp.org/favicon.ico" rel="icon">
-  <meta content="b5503d08b3a2bca5dc548e1079f898ac6578706e" name="document-revision">
+  <meta content="186a1cd59d2bdf95a2fec594e5330fe8937a3f0d" name="document-revision">
 <style>
 ins, ins * {
     background-color: rgb(200, 250, 200);
@@ -2103,7 +2103,7 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
   <div class="head">
    <p data-fill-with="logo"></p>
    <h1 class="p-name no-ref" id="title">P2769R1<br>get_element customization point object</h1>
-   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-15">2023-05-15</time></span></h2>
+   <h2 class="no-num no-toc no-ref heading settled" id="profile-and-date"><span class="content">Published Proposal, <time class="dt-updated" datetime="2023-05-18">2023-05-18</time></span></h2>
    <div data-fill-with="spec-metadata">
     <dl>
      <dt>This version:
@@ -2111,6 +2111,8 @@ c-[il] { color: #000000 } /* Literal.Number.Integer.Long */
      <dt class="editor">Authors:
      <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:ruslan.arutyunyan@intel.com">Ruslan Arutyunyan</a> (<span class="p-org org">Intel</span>)
      <dd class="editor p-author h-card vcard"><a class="p-name fn u-email email" href="mailto:alexey.kukanov@intel.com">Alexey Kukanov</a> (<span class="p-org org">Intel</span>)
+     <dt>Audience:
+     <dd>SG9, LEWG
      <dt>Project:
      <dd>ISO/IEC JTC1/SC22/WG21 14882: Programming Language — C++
     </dl>
@@ -2201,7 +2203,7 @@ we cannot easily use a predicate to make a decision based on only some of tuple 
    <p>As we can see, users should spell some extra syntax out to achieve the necessary goal,
 comparing to what is described in <a href="#desired_approach">§ 1.3 The desired approach</a>. The example above can be considered
 simplified; in real practice users might also need to think of e.g. adding references
-to lamdda parameters to avoid copying.</p>
+to lambda parameters to avoid copying.</p>
    <p>The code above can be rewritten with <em>structured binding</em>:</p>
 <pre class="language-cpp highlight"><c- n>std</c-><c- o>::</c-><c- n>vector</c-><c- o>&lt;</c-><c- n>std</c-><c- o>::</c-><c- n>tuple</c-><c- o>&lt;</c-><c- b>int</c-><c- p>,</c-> <c- b>int</c-><c- o>>></c-> <c- n>v</c-><c- p>{{</c-><c- mi>3</c-><c- p>,</c-><c- mi>1</c-><c- p>},{</c-><c- mi>2</c-><c- p>,</c-><c- mi>4</c-><c- p>},{</c-><c- mi>1</c-><c- p>,</c-><c- mi>7</c-><c- p>}};</c->
 <c- n>std</c-><c- o>::</c-><c- n>ranges</c-><c- o>::</c-><c- n>sort</c-><c- p>(</c-><c- n>v</c-><c- p>,</c-> <c- p>[](</c-><c- k>auto</c-> <c- n>x</c-><c- p>,</c-> <c- k>auto</c-> <c- n>y</c-><c- p>)</c->
