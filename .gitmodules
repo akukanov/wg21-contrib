@@ -1,0 +1,4 @@
+[submodule "wg21"]
+	path = wg21
+	url = ../mpark-wg21.git
+	branch = master
