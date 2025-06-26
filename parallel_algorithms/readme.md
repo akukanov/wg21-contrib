@@ -46,3 +46,12 @@ The proposal was approved by the C++ committee to be added (on top of P3179) to 
 - R2: https://isocpp.org/files/papers/P3709R2.html
 - R1: https://isocpp.org/files/papers/P3709R1.html
 - R0: https://wg21.link/p3709r0
+
+## P3732
+** Numeric range algorithms**
+
+The paper proposes adding `ranges` algorithm overloads (both parallel and non-parallel) for the `<numeric>` header.
+
+[Source code](P3732/numeric_ranges_algorithms.md) (for mpark/wg21)
+
+- R0: https://isocpp.org/files/papers/P3732R0.html
